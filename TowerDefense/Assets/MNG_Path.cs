@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowPath : MonoBehaviour {
+public class MNG_Path : MonoBehaviour {
+
+	public Transform mob;
 
 	public Transform wpParent;
-	public Transform castleDoor;
-	public Transform[] chest;
+	private Transform castleDoor;
+	private Transform chest;
 
-	public CastleDoorManager castleDoorMNG;
+	private MNG_Castle mngCastle;
 
 	public float speed = 10f;
 	public float atkCooldown = 1f;
@@ -17,10 +19,13 @@ public class FollowPath : MonoBehaviour {
 	private Queue<Transform> wpQueue;
 	private Transform nextWp;
 	private bool attackingCastle = false;
+	public bool gotChest = false;
 
-	// Use this for initialization
+
 	void Start () {
-		castleDoorMNG = GameObject.FindObjectOfType<CastleDoorManager>();
+		mngCastle = this.gameObject.GetComponent<MNG_Castle>();
+		castleDoor = mngCastle.door;
+		chest = mngCastle.chest;
 
 		wpQueue = new Queue<Transform>();
 		for (int i = 0; i < wpParent.childCount; i++) {
@@ -28,10 +33,7 @@ public class FollowPath : MonoBehaviour {
 		}
 
 		wpQueue.Enqueue(castleDoor);
-
-		for (int i = 0; i < chest.Length; i++) {
-			wpQueue.Enqueue(chest[i]);
-		}
+		wpQueue.Enqueue(chest);
 
 		for (int i = wpParent.childCount-1; i >= 0; i--) 
 		{
@@ -45,32 +47,42 @@ public class FollowPath : MonoBehaviour {
 
 		if (attackingCastle){
 			if (atkCooldown <= 0) {
-				castleDoorMNG.dealDamage(5);
+				mngCastle.dealDamage(5);
 				atkCooldown = 1f;
 
-				if (castleDoorMNG.destroyed) {
+				if (mngCastle.destroyed) {
 					attackingCastle = false;
 					nextWp = wpQueue.Dequeue();
 				}
 			}
 		}else{
-			if (nextWp == null || Vector3.Distance(nextWp.transform.position, this.transform.position) <= 0.5){
+			if (nextWp == null || Vector3.Distance(nextWp.transform.position, mob.transform.position) <= 0.5){
 				// We arrive at our next wp
 
-				if (nextWp == castleDoor && !castleDoorMNG.destroyed && !attackingCastle){
+				if (nextWp == castleDoor && !mngCastle.destroyed && !attackingCastle){
 					attackingCastle = true;
 				}else{ // We don't want to attack the castle door
 					if (wpQueue.Count > 0){
+						
+						if (nextWp == chest) {
+							gotChest = true;
+						}
+
 						nextWp = wpQueue.Dequeue();
-					}
-					else{
+
+					} else{
+						//We arrive back at the starting point
 						Destroy(this.gameObject);
 					}
 				}
 			}
 
 			float step = speed * Time.deltaTime;
-			this.transform.position = Vector3.MoveTowards(transform.position, nextWp.transform.position, step);
+			mob.transform.position = Vector3.MoveTowards(mob.transform.position, nextWp.transform.position, step);
+
+			if (gotChest) {
+				chest.position = mob.position;
+			}
 		}
 	}
 

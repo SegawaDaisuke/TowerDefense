@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CastleDoorManager : MonoBehaviour {
+public class MNG_Castle : MonoBehaviour {
 
+	public Transform castle;
+	public Transform door;
+	public Transform chest;
     public int maxHP = 100;
     public int currentHP;
     public bool destroyed = false;
@@ -26,12 +29,6 @@ public class CastleDoorManager : MonoBehaviour {
 
     public void destroyDoor() {
         destroyed = true;
-
-        foreach (Transform child in this.transform) {
-            if (child.name == "Door") {
-                // TODO Particle effect
-                child.gameObject.SetActive(false);
-            }
-        }
+        door.gameObject.SetActive(false);
     }
 }
